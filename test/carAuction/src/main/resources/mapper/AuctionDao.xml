@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.example.carauction.dao.AuctionDao">
+    <!--  获取汽车总数   -->
+    <select id="getCarTotal" resultType="java.lang.Integer">
+        SELECT count(*) FROM car;
+    </select>
+    <!--  获取客户总数   -->
+    <select id="getCustomerTotal" resultType="java.lang.Integer">
+        SELECT count(*) FROM customer;
+    </select>
+    <!--  获取汽车信息   -->
+    <select id="getCarInfo" resultType="com.example.carauction.bean.Car">
+        SELECT carID, location, (year+2000) AS year, type, mileage, vin, up, up_date FROM car
+        WHERE carID=#{id};
+    </select>
+    <!--  获取客户信息   -->
+    <select id="getCustomerInfo" resultType="com.example.carauction.bean.Customer">
+        SELECT * FROM customer
+        WHERE customerID=#{id};
+    </select>
+    <!--  获取特定类型汽车总数   -->
+    <select id="getCarTypeTotal" resultType="java.lang.Integer">
+        SELECT count(*) FROM car
+        WHERE left(type, LOCATE(' ',type) - 1) = #{type};
+    </select>
+    <!--  获取特定类型汽车信息   -->
+    <select id="getCarTypeInfo" statementType="CALLABLE" resultType="java.util.Map">
+        {call availableCars (#{type}, #{start}, #{limit})}
+    </select>
+    <!--  获取已有投标汽车总个数   -->
+    <select id="getCarBidTotal" resultType="java.lang.Integer">
+        SELECT count(*) FROM car
+        WHERE up_date IS NOT NULL;
+    </select>
+    <!--  获取汽车最高投标信息   -->
+    <select id="getBidsMax" statementType="CALLABLE" resultType="java.util.Map">
+        {call maxBids (#{start}, #{limit})}
+    </select>
+    <!--  检查汽车是否存在   -->
+    <select id="checkCarID" resultType="java.lang.Integer">
+        SELECT carID FROM car
+        WHERE carID = #{carID};
+    </select>
+    <!--  获取某汽车投标客户总个数   -->
+    <select id="getBidsTotal" resultType="java.lang.Integer">
+        SELECT count(*) FROM bids
+        WHERE carID = #{carID};
+    </select>
+    <!--  获取汽车最高投标信息   -->
+    <select id="getBidsWinAndLoser" statementType="CALLABLE" resultType="java.util.Map">
+        {call winners_and_losers (#{carID}, #{start}, #{limit})}
+    </select>
+    <!--  添加汽车   -->
+    <select id="addCar" parameterType="com.example.carauction.bean.AddCar" resultType="java.lang.Integer">
+        {call add_car (#{location}, #{year}, #{type}, #{mileage}, #{vin})}
+    </select>
+    <!--  添加客户   -->
+    <select id="addCustomer" parameterType="com.example.carauction.bean.AddCustomer" resultType="java.lang.Integer">
+        {call add_customer (#{name}, #{address}, #{city}, #{state}, #{zip}, #{telephone}, #{emailAddess})}
+    </select>
+    <!--  检查客户是否存在   -->
+    <select id="checkCustomerID" resultType="java.lang.Integer">
+        SELECT customerID FROM customer
+        WHERE customerID = #{customerID};
+    </select>
+    <!--  修改客户姓名   -->
+    <select id="changeCustomerName" parameterType="com.example.carauction.bean.CustomerName" resultType="java.lang.Integer">
+        {call update_customer_name (#{customerID}, #{name})}
+    </select>
+    <!--  检查汽车拍卖是否结束   -->
+    <select id="checkDate" resultType="java.lang.String">
+        select checkBid_date(#{carID}, now());
+    </select>
+    <!--  检查投标是否超过最高   -->
+    <select id="checkBid" parameterType="com.example.carauction.bean.Bid" resultType="java.lang.String">
+        select checkBid(#{carID}, #{bid});
+    </select>
+    <!--  添加投标   -->
+    <insert id="addBid" parameterType="com.example.carauction.bean.Bid">
+        insert into bids(customerID, carID, bid, date)
+            value (#{customerID}, #{carID}, #{bid}, now());
+    </insert>
+</mapper>
